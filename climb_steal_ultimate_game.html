@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Climb & Steal Animals - Ultimate Edition 17 Biomes + Admin</title>
+<style>
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+  #gameCanvas { width: 100%; height: 100%; display: block; }
+
+  #ui { position: absolute; inset: 0; pointer-events: none; }
+  .interactive { pointer-events: auto; }
+
+  /* CHAP MENYU TUGMALARI */
+  #leftPanel {
+    position: absolute; left: 10px; top: 44%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .side-btn {
+    width: 60px; height: 58px; border-radius: 12px; border: 3px solid #111;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; box-shadow: 0 4px 0 #000;
+    font-weight: 900; color: #fff; font-size: 10px;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  }
+  .side-btn:active { transform: scale(0.93); }
+  .side-btn .icon { font-size: 22px; line-height: 1; margin-bottom: 2px; }
+  .badge {
+    position: absolute; top: -6px; right: -6px; background: #ff2222; color: #fff;
+    border: 2px solid #000; border-radius: 50%; width: 22px; height: 22px;
+    font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 900;
+  }
+
+  /* VALYUTA VA TEZLIK */
+  #statsPanel {
+    position: absolute; left: 12px; bottom: 12px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .stat-row {
+    display: flex; align-items: center; gap: 6px; font-size: 21px; font-weight: 900;
+    text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  }
+  .speed-text { color: #38b6ff; }
+  .cash-text { color: #39ff14; }
+  .friend-boost { font-size: 12px; color: #fff; font-weight: 800; text-shadow: 1px 1px 0 #000; }
+
+  /* O'NG PANEL VA BALANDLIK SHKALASI */
+  #rightPanel {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #rightButtons { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .right-btn {
+    width: 64px; height: 64px; border-radius: 12px; border: 3px solid #111;
+    background: linear-gradient(180deg, #ff9933, #cc5200);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; box-shadow: 0 4px 0 #000;
+    color: #fff; font-weight: 900; font-size: 10px;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000;
+  }
+  .right-btn.eggs-btn { background: linear-gradient(180deg, #ffd633, #cc9900); }
+  .right-btn.jetpack-btn { background: linear-gradient(180deg, #ff3366, #990033); border-radius: 50%; width: 60px; height: 60px; }
+  .right-btn.sleep-btn { background: linear-gradient(180deg, #33ccff, #0055aa); display: none; }
+  .right-btn .icon { font-size: 24px; }
+
+  #altitudeBar {
+    width: 18px; height: 280px; border: 3px solid #000; border-radius: 8px;
+    overflow: hidden; display: flex; flex-direction: column-reverse; position: relative;
+    background: #222;
+  }
+  .alt-seg { flex: 1; width: 100%; }
+  #altMarker {
+    position: absolute; left: -34px; bottom: 0%; transform: translateY(50%);
+    background: #fff; color: #000; font-size: 9px; font-weight: 900;
+    padding: 2px 4px; border-radius: 5px; border: 2px solid #000;
+  }
+
+  /* PASTKI MARKAZ: STAMINA, STOP VA HOTBAR */
+  #bottomCenter {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+  .center-action-btn {
+    display: none; background: #ff2a2a; color: #fff; border: 3px solid #000;
+    padding: 5px 24px; font-weight: 900; font-size: 17px; border-radius: 8px;
+    cursor: pointer; box-shadow: 0 4px 0 #000; text-shadow: 1px 1px 0 #000;
+  }
+  #staminaContainer { display: none; flex-direction: column; align-items: center; gap: 2px; }
+  #staminaHint { font-size: 11px; font-weight: 900; color: #ffd700; text-shadow: 1px 1px 0 #000; }
+  #staminaBarWrap {
+    width: 260px; height: 22px; background: #1a2634; border: 3px solid #000;
+    border-radius: 8px; position: relative; overflow: hidden;
+  }
+  #staminaFill { width: 100%; height: 100%; background: linear-gradient(90deg, #1fa2ff, #12d8fa); }
+  #staminaText {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px; color: #fff; font-weight: 900; font-size: 12px; text-shadow: 1px 1px 0 #000;
+  }
+
+  #hotbar { display: flex; gap: 5px; }
+  .slot {
+    width: 50px; height: 50px; background: rgba(20, 25, 35, 0.88);
+    border: 3px solid #333; border-radius: 8px; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; font-size: 10px; font-weight: 800; cursor: pointer; text-shadow: 1px 1px 0 #000;
+  }
+  .slot.active { border-color: #39ff14; box-shadow: 0 0 8px #39ff14; }
+  .slot .num { position: absolute; top: 1px; left: 4px; font-size: 9px; color: #ccc; }
+  .slot .s-icon { font-size: 19px; }
+  .slot .s-name { font-size: 8px; max-width: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* YUQORI BANNERLAR */
+  #topCenter {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+  }
+  #offlineBanner { color: #ffd700; font-weight: 900; font-size: 13px; text-shadow: 1px 1px 0 #000; }
+  #zoneBanner { font-size: 19px; font-weight: 900; color: #39ff14; text-shadow: 2px 2px 0 #000; }
+  #alertBanner { font-size: 17px; font-weight: 900; color: #ffae00; text-shadow: 2px 2px 0 #000; }
+
+  /* TUNGI TAYMER */
+  #nightTimerBox {
+    position: absolute; right: 14px; bottom: 12px;
+    display: flex; flex-direction: column; align-items: flex-end;
+    color: #fff; font-weight: 900; font-size: 14px; text-shadow: 2px 2px 0 #000;
+  }
+
+  /* TUGMA BOSISH OYNA */
+  #interactPrompt {
+    position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(15, 20, 28, 0.94); border: 3px solid #fff; border-radius: 12px;
+    padding: 8px 16px; color: #fff; font-weight: 900; display: none;
+    align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+  }
+  #interactPrompt .key { background: #39ff14; color: #000; padding: 3px 9px; border-radius: 6px; font-size: 13px; }
+
+  /* MODAL OYNALAR */
+  .modal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(620px, 95vw); max-height: 86vh; background: #1e2738;
+    border: 4px solid #000; border-radius: 16px; display: none;
+    flex-direction: column; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.85); color: #fff;
+  }
+  .modal-header {
+    padding: 10px 16px; background: #ff9900; border-bottom: 4px solid #000;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 19px; font-weight: 900; text-shadow: 2px 2px 0 #000;
+  }
+  .close-btn {
+    background: #ff2a2a; color: #fff; border: 3px solid #000; border-radius: 8px;
+    width: 32px; height: 32px; font-weight: 900; font-size: 16px; cursor: pointer;
+  }
+  .modal-body { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+  .item-card {
+    background: #2b384e; border: 3px solid #000; border-radius: 10px; padding: 7px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    text-align: center; cursor: pointer; position: relative;
+  }
+  .item-card.selected { border-color: #39ff14; background: #264d2b; }
+  .action-btn {
+    background: #39ff14; color: #000; border: 3px solid #000; border-radius: 8px;
+    padding: 7px 12px; font-weight: 900; font-size: 12px; cursor: pointer; box-shadow: 0 3px 0 #000;
+  }
+  .action-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+
+/* ADMIN PANEL STILLARI */
+  .admin-section {
+    background: #141b26; border: 2px solid #ff2a2a; border-radius: 10px; padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .admin-title { color: #ff4444; font-weight: 900; font-size: 14px; text-transform: uppercase; }
+  .admin-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .admin-input {
+    background: #2b384e; color: #fff; border: 2px solid #000; border-radius: 6px;
+    padding: 6px 10px; font-weight: 900; width: 140px; user-select: text; -webkit-user-select: text;
+  }
+
+  /* SENSOR BOSHQARUV */
+  #joystickZone {
+    position: absolute; left: 82px; bottom: 82px; width: 105px; height: 105px;
+    background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; touch-action: none;
+  }
+  #joystickKnob {
+    position: absolute; left: 50%; top: 50%; width: 42px; height: 42px;
+    transform: translate(-50%, -50%); background: rgba(255,255,255,0.55);
+    border-radius: 50%; pointer-events: none;
+  }
+  #jumpBtn {
+    position: absolute; right: 86px; bottom: 72px; width: 64px; height: 64px;
+    background: rgba(30, 40, 55, 0.78); border: 3px solid #fff; border-radius: 50%;
+    color: #fff; font-size: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="ui">
+  <!-- Yuqori ma'lumotlar -->
+  <div id="topCenter">
+    <div id="offlineBanner">You Make $0/s Offline</div>
+    <div id="zoneBanner">Safe Zone</div>
+    <div id="alertBanner"></div>
+  </div>
+
+  <!-- Chap tugmalar -->
+  <div id="leftPanel" class="interactive">
+    <div class="side-btn" style="background:linear-gradient(180deg,#ff2222,#880000);border-color:#ffd700;" onclick="openModal('adminModal')">
+      <div class="icon">👑</div>ADMIN
+    </div>
+    <div class="side-btn" style="background:linear-gradient(180deg,#ff66cc,#cc0088);" onclick="openModal('shopModal')">
+      <div class="icon">🏪</div>SHOP
+    </div>
+    <div class="side-btn" style="background:linear-gradient(180deg,#33ccff,#0077cc);" onclick="openModal('indexModal')">
+      <div class="badge" id="indexBadge">0</div>
+      <div class="icon">📘</div>INDEX
+    </div>
+    <div class="side-btn" style="background:linear-gradient(180deg,#b366ff,#6600cc);" onclick="openModal('rebirthModal')">
+      <div class="icon">🔄</div>REBIRTH
+    </div>
+    <div class="side-btn" style="background:linear-gradient(180deg,#ffdd33,#cc8800);" onclick="openModal('claimModal')">
+      <div class="badge" id="claimBadge">9</div>
+      <div class="icon">🎁</div>CLAIM
+    </div>
+    <div class="side-btn" style="background:linear-gradient(180deg,#39ff14,#008800);" onclick="toggle2xSpeed()">
+      <div class="icon">⚡</div>2x Speed
+    </div>
+  </div>
+
+  <!-- Valyutalar -->
+  <div id="statsPanel">
+    <div class="stat-row speed-text">👟 <span id="speedVal">100</span></div>
+    <div class="stat-row cash-text">💵 <span id="cashVal">500</span></div>
+    <div class="friend-boost">Friend Boost: +0%</div>
+  </div>
+
+  <!-- O'ng panel va Balandlik shkalasi -->
+  <div id="rightPanel" class="interactive">
+    <div id="altitudeBar">
+      <div id="altMarker">YOU</div>
+    </div>
+    <div id="rightButtons">
+      <div class="right-btn jetpack-btn" onclick="toggleJetpack()">
+        <div class="icon">🚀</div>JETPACK
+      </div>
+      <div class="right-btn sleep-btn" id="sleepGuardsBtn" onclick="activateSleepGuards()">
+        <div class="icon">😴</div>SLEEP 15s
+      </div>
+      <div class="right-btn" onclick="openModal('animalsModal')">
+        <div class="icon">🐾</div>ANIMALS
+      </div>
+      <div class="right-btn eggs-btn" onclick="openModal('eggsModal')">
+        <div class="badge" id="eggsBadge">0</div>
+        <div class="icon">🥚</div>EGGS
+      </div>
+    </div>
+  </div>
+
+  <!-- Sensor joystik va sakrash -->
+  <div id="joystickZone" class="interactive"><div id="joystickKnob"></div></div>
+  <div id="jumpBtn" class="interactive">⬆️</div>
+
+  <!-- E / Bosish oynasi -->
+  <div id="interactPrompt" class="interactive" onclick="triggerInteraction()">
+    <span class="key">E / BOSING</span>
+    <span id="interactText">Interact</span>
+  </div>
+
+  <!-- Pastki Markaz -->
+  <div id="bottomCenter" class="interactive">
+    <button id="dropBtn" class="center-action-btn" onclick="dropCarriedEgg()">DROP</button>
+    <button id="stopTrainBtn" class="center-action-btn" onclick="stopTreadmill()">STOP</button>
+    <div id="staminaContainer">
+      <div id="staminaHint">Stamina reaches: <span id="staminaReachText">Forest</span></div>
+      <div id="staminaBarWrap">
+        <div id="staminaFill"></div>
+        <div id="staminaText"><span>STAMINA</span><span id="staminaNums">20/20</span></div>
+      </div>
+    </div>
+    <div id="hotbar"></div>
+  </div>
+
+  <!-- Tungi Taymer -->
+  <div id="nightTimerBox">
+    <div id="biomeStatusText" style="font-size:11px;color:#00e5ff;">Safe Zone</div>
+    <div>🌙 <span id="restockTimer">02m 00s</span></div>
+  </div>
+
+  <!-- ==================== ADMIN PANEL MODAL ==================== -->
+  <div id="adminModal" class="modal interactive">
+    <div class="modal-header" style="background:linear-gradient(90deg,#cc0000,#ff6600);">
+      <span>👑 ADMIN PANEL & ULTIMATE O'YIN FAYLI</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div class="admin-section" style="border-color:#ffd700;">
+        <div class="admin-title" style="color:#ffd700;">📥 Tayyor Fayl & Profil</div>
+        <div class="admin-row">
+          <button class="action-btn" style="background:#ffd700;" onclick="downloadStandaloneHTML()">📥 OʻYINNI FAYL QILIB YUKLAB OLISH (.HTML)</button>
+          <button class="action-btn" style="background:#00e5ff;" onclick="loadDemoSave()">⚡ PROFIL (158M Speed / 1Qa Cash)</button>
+          <button class="action-btn" style="background:#ff4444;color:#fff;" onclick="resetToZero()">🔄 0 DAN BOSHLASH</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-title">💵 Cash, Speed & Stamina</div>
+        <div class="admin-row">
+          <button class="action-btn" onclick="adminAddCash(1e9)">+$1B Cash</button>
+          <button class="action-btn" onclick="adminAddCash(1e15)">+$1Qa Cash</button>
+          <button class="action-btn" onclick="adminAddCash(1e24)">+$1Sp Cash</button>
+          <button class="action-btn" onclick="adminAddCash(1e45)">+$1Dc Cash</button>
+        </div>
+        <div class="admin-row">
+          <button class="action-btn" style="background:#38b6ff;" onclick="adminAddSpeed(1e6)">+1M Speed</button>
+          <button class="action-btn" style="background:#38b6ff;" onclick="adminAddSpeed(1e12)">+1T Speed</button>
+          <button class="action-btn" style="background:#b366ff;color:#fff;" onclick="adminAddRebirth(5)">+5 Rebirth</button>
+          <button class="action-btn" style="background:#00ffcc;" onclick="adminSetMaxStamina(600)">600 Stamina</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-title">🛡️ Maxsus Rejimlar (Cheats)</div>
+        <div class="admin-row">
+          <button class="action-btn" id="btnInfStam" onclick="adminToggleInfStamina()">♾️ Infinite Stamina: OFF</button>
+          <button class="action-btn" id="btnGodMode" onclick="adminToggleGodMode()">🛡️ God Mode (Boss ushlamaydi): OFF</button>
+          <button class="action-btn" id="btnSuperSpd" onclick="adminToggleSuperSpeed()">⚡ Super Speed (3x): OFF</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-title">🌀 17 Biomga Teleport</div>
+        <div class="admin-row" id="adminTeleportButtons"></div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-title">🐲 Hayvon va Tuxum Spawner</div>
+        <div class="admin-row">
+          <select id="adminSpawnPetSelect" class="admin-input" style="width:190px;"></select>
+          <select id="adminSpawnMutSelect" class="admin-input" style="width:120px;">
+            <option value="Normal">Normal (1x)</option>
+            <option value="Golden">Golden (2x)</option>
+            <option value="Radiant" selected>Radiant (3x)</option>
+            <option value="Eternal">Eternal (5x)</option>
+            <option value="Astral">Astral (8x)</option>
+          </select>
+          <button class="action-btn" onclick="adminSpawnPet(false)">🐾 Bazaga qo'shish</button>
+          <button class="action-btn" style="background:#ffd700;" onclick="adminSpawnPet(true)">🥚 Cho'ntakka tuxum</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <div class="admin-title">🌍 Dunyo Boshqaruvi</div>
+        <div class="admin-row">
+          <button class="action-btn" style="background:#00e5ff;" onclick="adminUnlockAllIndex()">📘 Barcha Indexlarni Ochish</button>
+          <button class="action-btn" style="background:#ff9900;" onclick="adminUnlockAllTrails()">👟 Barcha Traillarni Ochish</button>
+          <button class="action-btn" style="background:#39ff14;" onclick="hatchAllReady()">🐣 Inkubatorlarni Ochish</button>
+          <button class="action-btn" style="background:#b366ff;color:#fff;" onclick="adminForceNightReset()">🌙 Tuxumlarni Yangilash (Reset)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- 1. SHOP MODAL -->
+  <div id="shopModal" class="modal interactive">
+    <div class="modal-header" style="background:#ff3385;">
+      <span>🏪 EXCLUSIVE & EGG SHOP</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button class="action-btn" onclick="openModal('adminModal')" style="background:#ff2222;color:#fff;">👑 ADMIN PANEL</button>
+        <button class="action-btn" onclick="loadDemoSave()" style="background:#00e5ff;">⚡ PROFILNI YUKLASH</button>
+      </div>
+      <div class="card-grid" id="exclusiveShopGrid"></div>
+    </div>
+  </div>
+
+  <!-- 2. SELL MODAL -->
+  <div id="sellModal" class="modal interactive">
+    <div class="modal-header" style="background:#7a4b2a;">
+      <span>🐾 SELL ANIMALS</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+        <div style="display:flex;gap:6px;">
+          <button class="action-btn" style="background:#ffaa00;" onclick="sortSell('weight')">Sort: Weight</button>
+          <button class="action-btn" style="background:#ffaa00;" onclick="sortSell('val')">Sort: Value</button>
+          <button class="action-btn" style="background:#38b6ff;" onclick="selectAllSell()">Select All</button>
+        </div>
+        <div style="font-weight:900;font-size:16px;">Total: <span id="sellTotalVal" style="color:#39ff14;">$0</span></div>
+        <button class="action-btn" onclick="sellSelectedAnimals()">Sell</button>
+      </div>
+      <div id="sellGrid" class="card-grid"></div>
+    </div>
+  </div>
+
+  <!-- 3. MUTATE MACHINE MODAL -->
+  <div id="mutateModal" class="modal interactive">
+    <div class="modal-header" style="background:#9933ff;">
+      <span>🧬 Mutate Machine</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;font-weight:900;">Bring 3 Matching Animals To Fuse! (Golden -> Radiant -> Eternal -> Astral)</div>
+      <div id="mutateGrid" class="card-grid"></div>
+    </div>
+  </div>
+
+  <!-- 4. STAMINA SHOP MODAL -->
+  <div id="staminaModal" class="modal interactive">
+    <div class="modal-header" style="background:#1fa2ff;">
+      <span>⚡ UPGRADE YOUR STAMINA</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body" style="align-items:center;text-align:center;">
+      <div style="font-size:24px;font-weight:900;color:#38b6ff;">+4 Stamina</div>
+      <div style="font-size:19px;font-weight:900;margin:6px 0;">
+        <span id="stamCur">20</span> ➡️ <span id="stamNext">24</span>
+      </div>
+      <div id="stamReachInfo" style="color:#ffd700;font-weight:900;font-size:13px;">Upgrade to reach higher biomes!</div>
+      <button class="action-btn" id="stamBuyBtn" onclick="buyStamina()">$250</button>
+    </div>
+  </div>
+
+  <!-- 5. TRAILS SHOP MODAL -->
+  <div id="trailsModal" class="modal interactive">
+    <div class="modal-header" style="background:#ff6600;">
+      <span>👟 TRAILS SHOP (Multiply Speed)</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body" id="trailsList"></div>
+  </div>
+
+  <!-- 6. ANIMALS MODAL -->
+  <div id="animalsModal" class="modal interactive">
+    <div class="modal-header" style="background:#44cc00;">
+      <span>🐾 ACTIVE ANIMALS (<span id="activePetCount">0/15</span>)</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <button class="action-btn" onclick="equipBestPets()">EQUIP BEST</button>
+        <button class="action-btn" style="background:#00e5ff;" onclick="buyPetSlot()">+1 Animal Slot ($25T)</button>
+        <button class="action-btn" style="background:#ffae00;" onclick="openModal('sellModal')">SELL ANIMALS</button>
+      </div>
+      <div id="animalsList" class="card-grid"></div>
+    </div>
+  </div>
+
+  <!-- 7. GROWING EGGS MODAL -->
+  <div id="eggsModal" class="modal interactive">
+    <div class="modal-header" style="background:#cc8800;">
+      <span>🥚 GROWING EGGS (<span id="growingCount">0/6</span>)</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;">
+        <button class="action-btn" onclick="hatchAllReady()">GROW ALL / HATCH ALL</button>
+        <button class="action-btn" style="background:#00e5ff;" onclick="placeAllPocketEggs()">PLACE ALL FROM POCKET</button>
+      </div>
+      <div id="growingEggsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- 8. INDEX MODAL -->
+  <div id="indexModal" class="modal interactive">
+    <div class="modal-header" style="background:#0088cc;">
+      <span>📘 INDEX (<span id="indexTotalProgress">0/136</span>)</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button class="action-btn" onclick="claimIndexRewards()">CLAIM ALL REWARDS! (<span id="unclaimedIdxSpan">0</span>)</button>
+        <select id="biomeIndexFilter" onchange="renderIndexModal()" style="padding:6px;font-weight:900;border-radius:6px;border:2px solid #000;"></select>
+      </div>
+      <div id="indexList" class="card-grid"></div>
+    </div>
+  </div>
+
+  <!-- 9. REBIRTH MODAL -->
+  <div id="rebirthModal" class="modal interactive">
+    <div class="modal-header" style="background:#8800cc;">
+      <span>🔄 REBIRTH <span id="rebirthLvl">1</span></span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body" style="text-align:center;align-items:center;">
+      <div style="font-weight:900;font-size:17px;">Requirement: <span id="rebirthReq" style="color:#38b6ff;">50K Speed</span></div>
+      <div style="font-size:18px;margin:8px 0;">Cash Multiplier: <span id="rebirthMultCur">x1.0</span> ➡️ <span id="rebirthMultNext" style="color:#39ff14;">x1.5</span></div>
+      <div style="color:#ff5555;font-size:12px;">Your Speed Will Reset!</div>
+      <button class="action-btn" onclick="doRebirth()">REBIRTH</button>
+    </div>
+  </div>
+
+  <!-- 10. PLAYTIME REWARDS MODAL -->
+  <div id="claimModal" class="modal interactive">
+    <div class="modal-header" style="background:#ffaa00;">
+      <span>🎁 PLAYTIME REWARDS (9 GIFTS)</span>
+      <button class="close-btn" onclick="closeModals()">X</button>
+    </div>
+    <div class="modal-body" id="claimGrid" class="card-grid"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// === RAQAMLARNI FORMATLASH ===
+const SUFFIXES = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "UnD", "DuD", "TrD"];
+function fmt(num) {
+  if (num < 1000) return Math.floor(num).toString();
+  let tier = Math.floor(Math.log10(Math.abs(num)) / 3);
+  if (tier >= SUFFIXES.length) tier = SUFFIXES.length - 1;
+  const scaled = num / Math.pow(10, tier * 3);
+  return scaled.toFixed(scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2) + SUFFIXES[tier];
+}
+
+// === 17 TA BIOM VA 136 TA HAYVON (13 ESKI + 4 YANGI SUPER BIOM) ===
+const BIOMES = [
+  { name: "Forest", color: 0x1ec81e, height: 30, reqStam: 16, guardian: "Alpha Bear", pets: [
+    { name: "Mouse", rarity: "Common", rate: 5, val: 25, icon: "🐭" },
+    { name: "Squirrel", rarity: "Common", rate: 12, val: 60, icon: "🐿️" },
+    { name: "Rabbit", rarity: "Uncommon", rate: 30, val: 150, icon: "🐰" },
+    { name: "Fox", rarity: "Uncommon", rate: 75, val: 400, icon: "🦊" },
+    { name: "Deer", rarity: "Rare", rate: 200, val: 1200, icon: "🦌" },
+    { name: "Golden Retriever", rarity: "Rare", rate: 550, val: 3900, icon: "🐕" },
+    { name: "Wolf", rarity: "Epic", rate: 1500, val: 10000, icon: "🐺" },
+    { name: "Grizzly Bear", rarity: "Legendary", rate: 4500, val: 35000, icon: "🐻" }
+  ]},
+  { name: "Winter", color: 0xdbe9f4, height: 30, reqStam: 24, guardian: "Frost Yeti", pets: [
+    { name: "Snow Hare", rarity: "Common", rate: 12e3, val: 80e3, icon: "🐇" },
+    { name: "Penguin", rarity: "Common", rate: 25e3, val: 160e3, icon: "🐧" },
+    { name: "Tuna", rarity: "Uncommon", rate: 60e3, val: 400e3, icon: "🐟" },
+    { name: "Sail Fish", rarity: "Rare", rate: 150e3, val: 1e6, icon: "🐬" },
+    { name: "Arctic Fox", rarity: "Rare", rate: 400e3, val: 2.8e6, icon: "🦊" },
+    { name: "Walrus", rarity: "Epic", rate: 1.1e6, val: 8e6, icon: "🦭" },
+    { name: "Polar Bear", rarity: "Legendary", rate: 3.5e6, val: 25e6, icon: "🐻‍❄️" },
+    { name: "Ice Wolf", rarity: "Mythic", rate: 10e6, val: 80e6, icon: "🐺" }
+  ]},
+  { name: "Ocean", color: 0x0088ff, height: 32, reqStam: 32, guardian: "King Shark", pets: [
+    { name: "Clownfish", rarity: "Common", rate: 25e6, val: 180e6, icon: "🐠" },
+    { name: "Box Fish", rarity: "Common", rate: 55e6, val: 479e6, icon: "🐡" },
+    { name: "Crab", rarity: "Uncommon", rate: 120e6, val: 950e6, icon: "🦀" },
+    { name: "Seahorse", rarity: "Rare", rate: 300e6, val: 2.4e9, icon: "🐉" },
+    { name: "Stingray", rarity: "Rare", rate: 750e6, val: 6e9, icon: "🐟" },
+    { name: "Dolphin", rarity: "Epic", rate: 2e9, val: 16e9, icon: "🐬" },
+    { name: "Orca", rarity: "Legendary", rate: 6e9, val: 50e9, icon: "🐋" },
+    { name: "Lion Fish", rarity: "Mythic", rate: 21e9, val: 180e9, icon: "🐠" }
+  ]},
+  { name: "Desert", color: 0xffaa00, height: 32, reqStam: 40, guardian: "Sand Scorpion", pets: [
+    { name: "Meerkat", rarity: "Common", rate: 50e9, val: 400e9, icon: "🦦" },
+    { name: "Lizard", rarity: "Common", rate: 110e9, val: 900e9, icon: "🦎" },
+    { name: "Camel", rarity: "Uncommon", rate: 250e9, val: 2e12, icon: "🐪" },
+    { name: "Bull", rarity: "Rare", rate: 600e9, val: 5e12, icon: "🐂" },
+    { name: "Scorpion", rarity: "Rare", rate: 1.5e12, val: 12e12, icon: "🦂" },
+    { name: "Vulture", rarity: "Epic", rate: 4e12, val: 35e12, icon: "🦅" },
+    { name: "Kangaroo", rarity: "Legendary", rate: 11e12, val: 90e12, icon: "🦘" },
+    { name: "Sand Worm", rarity: "Mythic", rate: 32e12, val: 280e12, icon: "🪱" }
+  ]},
+  { name: "Crystal Mines", color: 0xff00aa, height: 34, reqStam: 52, guardian: "Crystal Golem", pets: [
+    { name: "Cave Bat", rarity: "Common", rate: 80e12, val: 650e12, icon: "🦇" },
+    { name: "Glow Bug", rarity: "Common", rate: 170e12, val: 1.4e15, icon: "🪲" },
+    { name: "Jellyfish", rarity: "Uncommon", rate: 400e12, val: 3.2e15, icon: "🪼" },
+    { name: "Mole", rarity: "Rare", rate: 950e12, val: 8e15, icon: "🦔" },
+    { name: "Moth", rarity: "Epic", rate: 2.4e15, val: 20e15, icon: "🦋" },
+    { name: "Crystal Spider", rarity: "Epic", rate: 6e15, val: 50e15, icon: "🕷️" },
+    { name: "Gem Crab", rarity: "Legendary", rate: 16e15, val: 130e15, icon: "🦀" },
+    { name: "Crystal Golem", rarity: "Mythic", rate: 45e15, val: 400e15, icon: "💎" }
+  ]},
+  { name: "Jungle", color: 0x0b5e18, height: 34, reqStam: 64, guardian: "Titan Elephant", pets: [
+    { name: "Toucan", rarity: "Common", rate: 100e15, val: 800e15, icon: "🦜" },
+    { name: "Tree Frog", rarity: "Uncommon", rate: 220e15, val: 1.8e18, icon: "🐸" },
+    { name: "Chameleon", rarity: "Rare", rate: 500e15, val: 4.5e18, icon: "🦎" },
+    { name: "Sloth", rarity: "Rare", rate: 1.2e18, val: 10e18, icon: "🦥" },
+    { name: "Panther", rarity: "Epic", rate: 3e18, val: 25e18, icon: "🐆" },
+    { name: "Gorilla", rarity: "Legendary", rate: 8e18, val: 70e18, icon: "🦍" },
+    { name: "Crocodile", rarity: "Mythic", rate: 22e18, val: 200e18, icon: "🐊" },
+    { name: "Capybara", rarity: "Mythic", rate: 60e18, val: 550e18, icon: "🐹" }
+  ]},
+  { name: "Mystic Isles", color: 0x6a0dad, height: 36, reqStam: 76, guardian: "Mystic Serpent", pets: [
+    { name: "Fairy Cat", rarity: "Common", rate: 150e18, val: 1.2e21, icon: "🐱" },
+    { name: "Mystic Owl", rarity: "Uncommon", rate: 350e18, val: 2.8e21, icon: "🦉" },
+    { name: "Koala", rarity: "Rare", rate: 800e18, val: 6.5e21, icon: "🐨" },
+    { name: "Peacock", rarity: "Rare", rate: 2e21, val: 16e21, icon: "🦚" },
+    { name: "Unicorn", rarity: "Epic", rate: 5e21, val: 45e21, icon: "🦄" },
+    { name: "Sword Fish", rarity: "Legendary", rate: 14e21, val: 120e21, icon: "🗡️" },
+    { name: "Snake", rarity: "Divine", rate: 40e21, val: 350e21, icon: "🐍" },
+    { name: "Mana Spirit", rarity: "Mythic", rate: 110e21, val: 950e21, icon: "👻" }
+  ]},
+  { name: "PreHistoric", color: 0xd92626, height: 36, reqStam: 88, guardian: "Alpha T-Rex", pets: [
+    { name: "Dodo", rarity: "Common", rate: 250e21, val: 2e24, icon: "🦤" },
+    { name: "Raptor", rarity: "Uncommon", rate: 600e21, val: 5e24, icon: "🦖" },
+    { name: "Triceratops", rarity: "Rare", rate: 1.5e24, val: 12e24, icon: "🦕" },
+    { name: "Stegosaurus", rarity: "Rare", rate: 3.8e24, val: 30e24, icon: "🦕" },
+    { name: "Pterodactyl", rarity: "Epic", rate: 10e24, val: 85e24, icon: "🦅" },
+    { name: "Mammoth", rarity: "Legendary", rate: 28e24, val: 240e24, icon: "🦣" },
+    { name: "T-Rex", rarity: "Mythic", rate: 80e24, val: 700e24, icon: "🦖" },
+    { name: "Spinosaurus", rarity: "Divine", rate: 220e24, val: 2e27, icon: "🐊" }
+  ]},
+  { name: "Divine Heights", color: 0xffe600, height: 36, reqStam: 100, guardian: "Solar Phoenix", pets: [
+    { name: "Cherub Dove", rarity: "Common", rate: 500e24, val: 4e27, icon: "🕊️" },
+    { name: "Winged Lion", rarity: "Uncommon", rate: 1.2e27, val: 10e27, icon: "🦁" },
+    { name: "Pegasus", rarity: "Rare", rate: 3e27, val: 25e27, icon: "🐎" },
+    { name: "Valkyrie Hound", rarity: "Epic", rate: 8e27, val: 70e27, icon: "🐕" },
+    { name: "Golden Stag", rarity: "Epic", rate: 22e27, val: 190e27, icon: "🦌" },
+    { name: "Phoenix", rarity: "Legendary", rate: 60e27, val: 500e27, icon: "🐦‍🔥" },
+    { name: "Sun Eagle", rarity: "Mythic", rate: 170e27, val: 1.5e30, icon: "🦅" },
+    { name: "Simurgh", rarity: "Divine", rate: 480e27, val: 4.2e30, icon: "🦚" }
+  ]},
+  { name: "Celestial", color: 0x00ffcc, height: 38, reqStam: 112, guardian: "Celestial Dragon", pets: [
+    { name: "Star Bunny", rarity: "Common", rate: 1e30, val: 8e30, icon: "🐰" },
+    { name: "Nebula Fox", rarity: "Uncommon", rate: 2.5e30, val: 20e30, icon: "🦊" },
+    { name: "Astral Wolf", rarity: "Rare", rate: 6.5e30, val: 55e30, icon: "🐺" },
+    { name: "Cosmic Owl", rarity: "Epic", rate: 18e30, val: 150e30, icon: "🦉" },
+    { name: "Kitsune", rarity: "Legendary", rate: 50e30, val: 420e30, icon: "🦊" },
+    { name: "Griffin", rarity: "Eternal", rate: 140e30, val: 1.2e33, icon: "🦅" },
+    { name: "Red Dragon", rarity: "Eternal", rate: 400e30, val: 3.5e33, icon: "🐉" },
+    { name: "Elephant", rarity: "Celestial", rate: 1.1e33, val: 9.5e33, icon: "🐘" }
+  ]},
+  { name: "Realm of Legends", color: 0x0044cc, height: 38, reqStam: 120, guardian: "Ancient Behemoth", pets: [
+    { name: "Cerberus", rarity: "Rare", rate: 2.8e33, val: 24e33, icon: "🐕" },
+    { name: "Hydra", rarity: "Epic", rate: 7.5e33, val: 65e33, icon: "🐍" },
+    { name: "Minotaur", rarity: "Epic", rate: 20e33, val: 180e33, icon: "🐂" },
+    { name: "Chimera", rarity: "Legendary", rate: 55e33, val: 480e33, icon: "🦁" },
+    { name: "Fenrir", rarity: "Mythic", rate: 150e33, val: 1.3e36, icon: "🐺" },
+    { name: "Yi Qi", rarity: "Radiant", rate: 420e33, val: 3.8e36, icon: "🐲" },
+    { name: "Gargoyle Bat", rarity: "Radiant", rate: 1.2e36, val: 10e36, icon: "🦇" },
+    { name: "Behemoth", rarity: "Eternal", rate: 3.5e36, val: 30e36, icon: "🦛" }
+  ]},
+  { name: "Ocean Abyss", color: 0x0055aa, height: 38, reqStam: 128, guardian: "Abyssal Kraken", pets: [
+    { name: "Coral Turtle", rarity: "Radiant", rate: 9e36, val: 80e36, icon: "🐢" },
+    { name: "Coral Clownfish", rarity: "Radiant", rate: 24e36, val: 210e36, icon: "🐠" },
+    { name: "Diamond Fish", rarity: "Radiant", rate: 65e36, val: 580e36, icon: "🐟" },
+    { name: "Vampire Squid", rarity: "Eternal", rate: 180e36, val: 1.6e39, icon: "🦑" },
+    { name: "Abyssal Angler", rarity: "Astral", rate: 500e36, val: 4.5e39, icon: "🐡" },
+    { name: "Kraken", rarity: "Royal", rate: 1.4e39, val: 12e39, icon: "🐙" },
+    { name: "Megalodon", rarity: "Radiant", rate: 4e39, val: 35e39, icon: "🦈" },
+    { name: "Leviathan", rarity: "Astral", rate: 12e39, val: 100e39, icon: "🐉" }
+  ]},
+  { name: "Forbidden Forest", color: 0x220033, height: 40, reqStam: 136, guardian: "Elder Cthulhu", pets: [
+    { name: "Shadow Imp", rarity: "Mythic", rate: 30e39, val: 260e39, icon: "😈" },
+    { name: "Void Spider", rarity: "Mythic", rate: 80e39, val: 700e39, icon: "🕷️" },
+    { name: "Cursed Stag", rarity: "Divine", rate: 220e39, val: 2e42, icon: "🦌" },
+    { name: "Phantom Wolf", rarity: "Eternal", rate: 600e39, val: 5.5e42, icon: "🐺" },
+    { name: "Nightmare Dragon", rarity: "Radiant", rate: 1.7e42, val: 15e42, icon: "🐉" },
+    { name: "Void Reaper", rarity: "Astral", rate: 4.8e42, val: 42e42, icon: "💀" },
+    { name: "World Serpent", rarity: "Astral", rate: 14e42, val: 120e42, icon: "🐍" },
+    { name: "Cthulhu", rarity: "Astral", rate: 45e42, val: 400e42, icon: "🐙" }
+  ]},
+  // === 4 TA YANGI SUPER BIOM ===
+  { name: "Starfall Galaxy", color: 0x7b1fa2, height: 40, reqStam: 146, guardian: "Galaxy Titan", pets: [
+    { name: "Comet Sprite", rarity: "Mythic", rate: 150e42, val: 1.3e45, icon: "☄️" },
+    { name: "Stellar Golem", rarity: "Divine", rate: 500e42, val: 4.5e45, icon: "🌟" },
+    { name: "Meteor Hound", rarity: "Eternal", rate: 1.8e45, val: 16e45, icon: "🐕" },
+    { name: "Supernova Phoenix", rarity: "Radiant", rate: 6e45, val: 55e45, icon: "🐦‍🔥" },
+    { name: "Galaxy Dragon", rarity: "Astral", rate: 20e45, val: 180e45, icon: "🐲" },
+    { name: "Nebula Behemoth", rarity: "Astral", rate: 70e45, val: 620e45, icon: "🪐" },
+    { name: "Cosmic Overlord", rarity: "Astral", rate: 250e45, val: 2.2e48, icon: "👽" },
+    { name: "Galaxy Monarch", rarity: "Secret", rate: 1e48, val: 9e48, icon: "👑" }
+  ]},
+  { name: "Cyber Neon City", color: 0x00e5ff, height: 42, reqStam: 156, guardian: "Cyber Cyborg", pets: [
+    { name: "Neon Drone", rarity: "Mythic", rate: 3e48, val: 27e48, icon: "🛸" },
+    { name: "Cyber Panther", rarity: "Divine", rate: 10e48, val: 90e48, icon: "🐆" },
+    { name: "Matrix Hacker", rarity: "Eternal", rate: 35e48, val: 310e48, icon: "💻" },
+    { name: "Holo Samurai", rarity: "Radiant", rate: 120e48, val: 1.1e51, icon: "🗡️" },
+    { name: "Neon Mecha Dragon", rarity: "Astral", rate: 400e48, val: 3.6e51, icon: "🤖" },
+    { name: "Cyber Titan", rarity: "Astral", rate: 1.4e51, val: 12e51, icon: "🦾" },
+    { name: "Quantum AI", rarity: "Astral", rate: 5e51, val: 45e51, icon: "🧠" },
+    { name: "Neon God Mech", rarity: "Secret", rate: 2e52, val: 18e52, icon: "⚡" }
+  ]},
+  { name: "Void Dimension", color: 0x111111, height: 44, reqStam: 168, guardian: "Void Sovereign", pets: [
+    { name: "Void Wisp", rarity: "Divine", rate: 8e52, val: 70e52, icon: "👻" },
+    { name: "Abyss Stalker", rarity: "Eternal", rate: 30e52, val: 260e52, icon: "🕷️" },
+    { name: "Null Beast", rarity: "Radiant", rate: 110e52, val: 950e52, icon: "🐅" },
+    { name: "Darkness Lord", rarity: "Astral", rate: 400e52, val: 3.5e55, icon: "🖤" },
+    { name: "Singularity Demon", rarity: "Astral", rate: 1.5e55, val: 13e55, icon: "🌀" },
+    { name: "Entropy Dragon", rarity: "Astral", rate: 6e55, val: 52e55, icon: "🐉" },
+    { name: "Void Monarch", rarity: "Secret", rate: 25e55, val: 220e55, icon: "👑" },
+    { name: "The Nothingness", rarity: "Secret", rate: 1e56, val: 9e56, icon: "🕳️" }
+  ]},
+  { name: "Realm of Gods", color: 0xffd700, height: 46, reqStam: 180, guardian: "Supreme Creator Zeus", pets: [
+    { name: "Celestial Angel", rarity: "Eternal", rate: 4e56, val: 35e56, icon: "👼" },
+    { name: "Divine Griffin", rarity: "Radiant", rate: 15e56, val: 130e56, icon: "🦅" },
+    { name: "Golden Seraph", rarity: "Astral", rate: 60e56, val: 520e56, icon: "✨" },
+    { name: "Sun God Phoenix", rarity: "Astral", rate: 250e56, val: 2.2e59, icon: "☀️" },
+    { name: "Infinity Dragon", rarity: "Astral", rate: 1e59, val: 9e59, icon: "🐲" },
+    { name: "Primeval Titan", rarity: "Secret", rate: 5e59, val: 45e59, icon: "🗿" },
+    { name: "Omnipotent God", rarity: "Secret", rate: 25e59, val: 220e59, icon: "🌟" },
+    { name: "Absolute Infinity", rarity: "Secret", rate: 1e60, val: 9e60, icon: "♾️" }
+  ]}
+];
+
+// === O'YIN HOLATI ===
+const state = {
+  speed: 500,
+  cash: 1500,
+  rebirths: 0,
+  cashMult: 1.0,
+  maxStamina: 20,
+  stamina: 20,
+  staminaCost: 250,
+  treadmillLvl: 1,
+  treadmillCost: 500,
+  onTreadmill: false,
+  trailMult: 1,
+  activeTrailColor: 0xaaaaaa,
+  jetpackActive: false,
+  speed2xActive: false,
+  guardsAsleepTimer: 0,
+  maxActivePets: 15,
+  carriedEgg: null,
+  selectedHotbar: 0,
+  eggPocket: [],
+  incubators: [null, null, null, null, null, null],
+  adminInfStamina: false,
+  adminGodMode: false,
+  adminSuperSpeed: false,
+  animals: [
+    { id: 1, name: "Mouse", rarity: "Common", mutation: "Normal", rate: 5, val: 25, weight: 2, icon: "🐭", equipped: true, selected: false }
+  ],
+  unlockedIndex: { "Mouse": true },
+  unclaimedIndexCount: 0,
+  trails: [
+    { name: "Gray Trail", mult: 1.5, cost: 100, color: 0xaaaaaa, owned: false },
+    { name: "Green Trail", mult: 2, cost: 5000, color: 0x39ff14, owned: false },
+    { name: "Blue Trail", mult: 4, cost: 750e6, color: 0x0088ff, owned: false },
+    { name: "Black Trail", mult: 5, cost: 20e9, color: 0x222222, owned: false },
+    { name: "Galaxy Trail", mult: 7, cost: 500e9, color: 0xd938ff, owned: false },
+    { name: "Candy Trail", mult: 10, cost: 15e12, color: 0xff66cc, owned: false },
+    { name: "Rainbow Trail", mult: 14, cost: 300e12, color: 0xff0055, owned: false },
+    { name: "Thunder Trail", mult: 18, cost: 50e15, color: 0x00e5ff, owned: false },
+    { name: "Divine Trail", mult: 22, cost: 850e15, color: 0xffea00, owned: false }
+  ],
+  playtimeRewards: [
+    { label: "$500 Cash", cash: 500, reqSec: 10, claimed: false },
+    { label: "Golden Retriever", pet: BIOMES[0].pets[5], reqSec: 30, claimed: false },
+    { label: "$5K Cash", cash: 5000, reqSec: 60, claimed: false },
+    { label: "Sail Fish", pet: BIOMES[1].pets[3], reqSec: 90, claimed: false },
+    { label: "$250K Cash", cash: 250e3, reqSec: 120, claimed: false },
+    { label: "Lion Fish", pet: BIOMES[2].pets[7], reqSec: 180, claimed: false },
+    { label: "$25M Cash", cash: 25e6, reqSec: 240, claimed: false },
+    { label: "Koala", pet: BIOMES[6].pets[2], reqSec: 300, claimed: false },
+    { label: "Simurgh (Divine)", pet: BIOMES[8].pets[7], reqSec: 420, claimed: false }
+  ],
+  sessionSeconds: 0,
+  restockSeconds: 120
+};
+
+function loadDemoSave() {
+  state.speed = 158e6;
+  state.cash = 1.05e15;
+  state.rebirths = 6;
+  state.cashMult = 3.5;
+  state.maxStamina = 200;
+  state.stamina = 200;
+  state.staminaCost = 50e15;
+  state.treadmillLvl = 9;
+  state.treadmillCost = 10e15;
+  state.trailMult = 22;
+  state.activeTrailColor = 0xffea00;
+  state.animals = [
+    { id: 101, name: "Absolute Infinity", rarity: "Secret", mutation: "Astral", rate: 1e60, val: 9e60, weight: 5000, icon: "♾️", equipped: true, selected: false },
+    { id: 102, name: "Supreme Creator Zeus", rarity: "Secret", mutation: "Astral", rate: 25e59, val: 220e59, icon: "⚡", equipped: true, selected: false }
+  ];
+  state.animals.forEach(a => state.unlockedIndex[a.name] = true);
+  rebuildBasePetMeshes();
+  closeModals();
+  showAlert("Ultimate Profil yuklandi! (200 Stamina, Secret Hayvonlar)", "#39ff14");
+}
+
+function resetToZero() { location.reload(); }
+
+function downloadStandaloneHTML() {
+  const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "climb_steal_ultimate_game.html";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showAlert("📥 Ultimate O'yin Fayli yuklab olindi!", "#39ff14");
+}
+
+// Interfeys elementlarini to'ldirish
+const altBar = document.getElementById("altitudeBar");
+const biomeSelect = document.getElementById("biomeIndexFilter");
+const adminPetSelect = document.getElementById("adminSpawnPetSelect");
+const allPetsFlat = [];
+
+BIOMES.forEach((b, idx) => {
+  const seg = document.createElement("div");
+  seg.className = "alt-seg";
+  seg.style.background = "#" + b.color.toString(16).padStart(6, "0");
+  altBar.appendChild(seg);
+
+  const opt = document.createElement("option");
+  opt.value = idx;
+  opt.textContent = `${idx + 1}. ${b.name}`;
+  biomeSelect.appendChild(opt);
+
+  b.pets.forEach(p => {
+    allPetsFlat.push(p);
+    const pOpt = document.createElement("option");
+    pOpt.value = p.name;
+    pOpt.textContent = `${p.icon} ${p.name} (${b.name} - $${fmt(p.rate)}/s)`;
+    adminPetSelect.appendChild(pOpt);
+  });
+});
+
+// === ADMIN FUNKSIYALARI ===
+function adminAddCash(amount) { state.cash += amount; showAlert(`👑 Admin: +$${fmt(amount)} Cash!`, "#39ff14"); }
+function adminAddSpeed(amount) { state.speed += amount; showAlert(`👑 Admin: +${fmt(amount)} Speed!`, "#38b6ff"); }
+function adminAddRebirth(count) { state.rebirths += count; state.cashMult += count * 0.5; showAlert(`👑 Admin: +${count} Rebirth!`, "#b366ff"); }
+function adminSetMaxStamina(val) { state.maxStamina = val; state.stamina = val; showAlert(`👑 Admin: Stamina ${val}!`, "#00ffcc"); }
+function adminToggleInfStamina() {
+  state.adminInfStamina = !state.adminInfStamina;
+  if (state.adminInfStamina) state.stamina = state.maxStamina;
+  const btn = document.getElementById("btnInfStam");
+  btn.textContent = `♾️ Infinite Stamina: ${state.adminInfStamina ? "ON" : "OFF"}`;
+  btn.style.background = state.adminInfStamina ? "#39ff14" : "#ffaa00";
+}
+function adminToggleGodMode() {
+  state.adminGodMode = !state.adminGodMode;
+  const btn = document.getElementById("btnGodMode");
+  btn.textContent = `🛡️ God Mode: ${state.adminGodMode ? "ON" : "OFF"}`;
+  btn.style.background = state.adminGodMode ? "#39ff14" : "#ffaa00";
+}
+function adminToggleSuperSpeed() {
+  state.adminSuperSpeed = !state.adminSuperSpeed;
+  const btn = document.getElementById("btnSuperSpd");
+  btn.textContent = `⚡ Super Speed: ${state.adminSuperSpeed ? "ON" : "OFF"}`;
+  btn.style.background = state.adminSuperSpeed ? "#39ff14" : "#ffaa00";
+}
+function adminTeleportTo(x, y, z, label) {
+  player.climbing = false;
+  player.vel.set(0, 0, 0);
+  player.pos.set(x, y, z);
+  closeModals();
+  showAlert(`🌀 Teleported to ${label}!`, "#00e5ff");
+}
+function adminSpawnPet(asEgg) {
+  const petName = adminPetSelect.value;
+  const mutation = document.getElementById("adminSpawnMutSelect").value;
+  const basePet = allPetsFlat.find(p => p.name === petName) || BIOMES[0].pets[0];
+  const mult = { Normal: 1, Golden: 2, Radiant: 3, Eternal: 5, Astral: 8 }[mutation] || 1;
+
+  if (asEgg) {
+    state.eggPocket.push({ ...basePet, mutation });
+    renderHotbar();
+    showAlert(`🥚 ${basePet.name} Egg cho'ntakka qo'shildi!`, "#ffd700");
+  } else {
+    state.animals.push({
+      id: Date.now() + Math.random(),
+      name: basePet.name, rarity: basePet.rarity, mutation,
+      rate: basePet.rate * mult, val: basePet.val * mult,
+      weight: Math.floor(50 + Math.random() * 950), icon: basePet.icon,
+      equipped: state.animals.filter(a => a.equipped).length < state.maxActivePets, selected: false
+    });
+    state.unlockedIndex[basePet.name] = true;
+    rebuildBasePetMeshes();
+    showAlert(`🐾 ${basePet.name} bazaga qo'shildi!`, "#39ff14");
+  }
+}
+function adminUnlockAllIndex() {
+  allPetsFlat.forEach(p => { state.unlockedIndex[p.name] = true; });
+  state.unclaimedIndexCount = 30;
+  showAlert("📘 Barcha 136/136 Indexlar ochildi!", "#00e5ff");
+}
+function adminUnlockAllTrails() {
+  state.trails.forEach(t => t.owned = true);
+  state.trailMult = 22;
+  state.activeTrailColor = 0xffea00;
+  trailPieces.forEach(p => p.mesh.material.color.setHex(0xffea00));
+  showAlert("👟 Barcha Traillar ochildi!", "#ffd700");
+}
+function adminForceNightReset() { state.restockSeconds = 1; closeModals(); }
+
+// === THREE.JS SAHNA ===
+const canvas = document.getElementById("gameCanvas");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x5ec8ff);
+scene.fog = new THREE.FogExp2(0x5ec8ff, 0.0008);
+
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 2000);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x446633, 0.9));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.75);
+dirLight.position.set(70, 220, 120);
+scene.add(dirLight);
+
+function createStudTexture(bgHex, lineHex) {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = bgHex; ctx.fillRect(0, 0, 64, 64);
+  ctx.strokeStyle = lineHex; ctx.lineWidth = 2;
+  ctx.strokeRect(2, 2, 60, 60);
+  ctx.beginPath(); ctx.arc(32, 32, 12, 0, Math.PI * 2); ctx.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function makeLabelSprite(text, color = "#ffffff", bg = "rgba(0,0,0,0.68)", scale = 8) {
+  const c = document.createElement("canvas");
+  c.width = 512; c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = bg; ctx.fillRect(12, 16, 488, 96);
+  ctx.font = "900 40px Segoe UI, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 7;
+  ctx.strokeText(text, 256, 64);
+  ctx.fillStyle = color; ctx.fillText(text, 256, 64);
+  const tex = new THREE.CanvasTexture(c);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  sp.scale.set(scale, scale * 0.25, 1);
+  return sp;
+}
+
+// === YER VA BAZA ===
+const grassTex = createStudTexture("#39e600", "#2bb300");
+grassTex.repeat.set(90, 90);
+const ground = new THREE.Mesh(new THREE.BoxGeometry(280, 2, 280), new THREE.MeshLambertMaterial({ map: grassTex }));
+ground.position.set(0, -1, 20);
+scene.add(ground);
+
+const safeZoneLine = new THREE.Mesh(new THREE.PlaneGeometry(110, 4), new THREE.MeshBasicMaterial({ color: 0x00e5ff }));
+safeZoneLine.rotation.x = -Math.PI / 2;
+safeZoneLine.position.set(0, 0.05, -28);
+scene.add(safeZoneLine);
+const safeSprite = makeLabelSprite("🛡️ Safe Zone 🛡️", "#00e5ff", "rgba(0,0,0,0.75)", 14);
+safeSprite.position.set(0, 2.5, -28);
+scene.add(safeSprite);
+
+const BASE_POS = new THREE.Vector3(24, 0, 10);
+const baseTitle = makeLabelSprite("YOUR BASE", "#ffffff", "rgba(0,0,0,0.75)", 13);
+baseTitle.position.set(BASE_POS.x, 8, BASE_POS.z);
+scene.add(baseTitle);
+const baseRateSprite = makeLabelSprite("$5/s", "#39ff14", "rgba(0,0,0,0.75)", 11);
+baseRateSprite.position.set(BASE_POS.x, 10.5, BASE_POS.z);
+scene.add(baseRateSprite);
+
+const incubatorMeshes = [];
+for (let i = 0; i < 6; i++) {
+  const ped = new THREE.Group();
+  const baseBox = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.8, 12), new THREE.MeshLambertMaterial({ color: 0x334455 }));
+  baseBox.position.y = 0.4; ped.add(baseBox);
+  const eggMesh = new THREE.Mesh(new THREE.SphereGeometry(0.9, 12, 12), new THREE.MeshLambertMaterial({ color: 0xffaa00 }));
+  eggMesh.scale.set(1, 1.35, 1); eggMesh.position.y = 1.6; ped.add(eggMesh);
+  const label = makeLabelSprite("Empty", "#ffffff", "rgba(0,0,0,0.7)", 5.5);
+  label.position.y = 3.3; ped.add(label);
+  ped.position.set(BASE_POS.x - 11 + i * 4.4, 0, BASE_POS.z - 11);
+  scene.add(ped);
+  incubatorMeshes.push({ group: ped, eggMesh, label, index: i });
+}
+
+const TREADMILL_POS = new THREE.Vector3(BASE_POS.x - 14, 0.2, BASE_POS.z + 2);
+const treadmill = new THREE.Mesh(new THREE.BoxGeometry(5, 0.4, 8), new THREE.MeshLambertMaterial({ color: 0x00ccff }));
+treadmill.position.copy(TREADMILL_POS);
+scene.add(treadmill);
+const treadSprite = makeLabelSprite("👟 TREADMILL LVL 1", "#38b6ff", "rgba(0,0,0,0.8)", 8.5);
+treadSprite.position.set(TREADMILL_POS.x, 3.8, TREADMILL_POS.z);
+scene.add(treadSprite);
+
+const basePetMeshes = [];
+function rebuildBasePetMeshes() {
+  basePetMeshes.forEach(m => scene.remove(m.group));
+  basePetMeshes.length = 0;
+  state.animals.filter(a => a.equipped).forEach(pet => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1.7, 2.2), new THREE.MeshLambertMaterial({ color: 0x39ff14 }));
+    body.position.y = 1.0; g.add(body);
+    const sp = makeLabelSprite(`${pet.name} ($${fmt(pet.rate)}/s)`, "#ffea00", "rgba(0,0,0,0.75)", 6.5);
+    sp.position.y = 3.1; g.add(sp);
+    g.position.set(BASE_POS.x + (Math.random() - 0.5) * 18, 0, BASE_POS.z + (Math.random() - 0.3) * 16);
+    scene.add(g);
+    basePetMeshes.push({ group: g, angle: Math.random() * Math.PI * 2 });
+  });
+}
+
+// DO'KONLAR
+const interactables = [];
+function createBooth(x, z, color, title, sub, actionFn) {
+  const g = new THREE.Group();
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(6, 4.5, 4), new THREE.MeshLambertMaterial({ color }));
+  stand.position.y = 2.25; g.add(stand);
+  const sp1 = makeLabelSprite(title, "#ffff00", "rgba(0,0,0,0.8)", 8.5);
+  sp1.position.y = 6.2; g.add(sp1);
+  const sp2 = makeLabelSprite(sub, "#ffffff", "rgba(0,0,0,0.7)", 6.5);
+  sp2.position.y = 4.9; g.add(sp2);
+  g.position.set(x, 0, z); scene.add(g);
+  interactables.push({ pos: new THREE.Vector3(x, 0, z), radius: 5.8, label: title, action: actionFn });
+}
+createBooth(-26, 6, 0x8a2be2, "Mutate Machine", "Bring 3 Animals!", () => openModal("mutateModal"));
+createBooth(-8, -14, 0x8b4513, "SELL!", "Sell Animals!", () => openModal("sellModal"));
+createBooth(8, -14, 0x1e90ff, "STAMINA SHOP", "Upgrade Stamina!", () => openModal("staminaModal"));
+createBooth(-22, -14, 0x9933ff, "TRAILS SHOP", "Buy Trails!", () => openModal("trailsModal"));
+createBooth(-35, -14, 0xff2255, "EXCLUSIVE SHOP", "Lucky Eggs!", () => openModal("shopModal"));
+
+interactables.push({
+  pos: TREADMILL_POS, radius: 5.2, label: "Upgrade Treadmill",
+  action: () => {
+    if (state.cash >= state.treadmillCost) {
+      state.cash -= state.treadmillCost; state.treadmillLvl++; state.treadmillCost *= 3.5;
+      showAlert(`Treadmill Upgraded to Level ${state.treadmillLvl}!`, "#39ff14");
+    } else { showAlert("Not enough Cash!", "#ff5555"); }
+  }
+});
+
+// === 17 TA BIOM DEVORI VA PLATFORMALARI ===
+const WALL_Z = -40;
+const WALL_WIDTH = 44;
+let currentY = 0;
+const biomeBounds = [];
+const wildEggMeshes = [];
+const biomeGuardians = [];
+
+const tpContainer = document.getElementById("adminTeleportButtons");
+const homeBtn = document.createElement("button");
+homeBtn.className = "action-btn"; homeBtn.style.background = "#00e5ff";
+homeBtn.textContent = "🏠 Your Base";
+homeBtn.onclick = () => adminTeleportTo(BASE_POS.x, 0, BASE_POS.z - 6, "Your Base");
+tpContainer.appendChild(homeBtn);
+
+BIOMES.forEach((b, idx) => {
+  const startY = currentY;
+  const endY = currentY + b.height;
+  const platWidth = 36;
+  const platDepth = 26;
+  const sideX = (idx % 2 === 0 ? 1 : -1) * (WALL_WIDTH / 2 + platWidth / 2 - 2);
+
+  biomeBounds.push({ ...b, startY, endY, index: idx, sideX });
+
+  const tpBtn = document.createElement("button");
+  tpBtn.className = "action-btn";
+  tpBtn.textContent = `${idx + 1}. ${b.name}`;
+  tpBtn.onclick = () => adminTeleportTo(sideX, endY + 0.5, WALL_Z - 6, b.name);
+  tpContainer.appendChild(tpBtn);
+
+  const wallSeg = new THREE.Mesh(new THREE.BoxGeometry(WALL_WIDTH, b.height, 2), new THREE.MeshLambertMaterial({ color: b.color }));
+  wallSeg.position.set(0, startY + b.height / 2, WALL_Z);
+  scene.add(wallSeg);
+
+  const plat = new THREE.Mesh(new THREE.BoxGeometry(platWidth, 2, platDepth), new THREE.MeshLambertMaterial({ color: b.color }));
+  plat.position.set(sideX, endY - 1, WALL_Z - 8);
+  scene.add(plat);
+
+  const sign = makeLabelSprite(`Welcome to ${b.name}!`, "#ffff00", "rgba(0,0,0,0.8)", 11);
+  sign.position.set(0, endY - 2, WALL_Z + 2.5);
+  scene.add(sign);
+
+  const bossGroup = new THREE.Group();
+  const bossBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 5.2, 4.2), new THREE.MeshLambertMaterial({ color: 0x4b1d70 }));
+  bossBody.position.y = 2.6; bossGroup.add(bossBody);
+  const bossLbl = makeLabelSprite(`👾 ${b.guardian}`, "#ff4444", "rgba(0,0,0,0.8)", 7.5);
+  bossLbl.position.y = 6.5; bossGroup.add(bossLbl);
+  bossGroup.position.set(sideX, endY, WALL_Z - 10);
+  scene.add(bossGroup);
+
+  biomeGuardians.push({ group: bossGroup, name: b.guardian, centerX: sideX, y: endY, centerZ: WALL_Z - 10, angle: Math.random() * Math.PI * 2 });
+  currentY = endY;
+});
+const TOTAL_WALL_HEIGHT = currentY;
+
+function spawnAllBiomeEggs() {
+  wildEggMeshes.forEach(e => scene.remove(e.group));
+  wildEggMeshes.length = 0;
+  biomeBounds.forEach((b) => {
+    const sideX = b.sideX;
+    for (let s = 0; s < 4; s++) {
+      const pet = b.pets[Math.floor(Math.random() * b.pets.length)];
+      const mutation = ["Normal", "Golden", "Radiant"][Math.floor(Math.random() * 3)];
+      const g = new THREE.Group();
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.05, 12, 12), new THREE.MeshLambertMaterial({ color: 0x00ffcc }));
+      mesh.scale.set(1, 1.35, 1); mesh.position.y = 1.35; g.add(mesh);
+      const sp = makeLabelSprite(`${pet.rarity} - ${pet.name} Egg`, "#00ffcc", "rgba(0,0,0,0.8)", 6.5);
+      sp.position.y = 3.4; g.add(sp);
+      const ex = sideX - 11 + s * 7.2;
+      const ez = WALL_Z - 3 - (s % 2) * 8;
+      g.position.set(ex, b.endY, ez);
+      scene.add(g);
+      wildEggMeshes.push({ group: g, pet: { ...pet, mutation }, pos: new THREE.Vector3(ex, b.endY, ez), stolen: false });
+    }
+  });
+}
+spawnAllBiomeEggs();
+
+// O'YINCHI
+const player = { pos: new THREE.Vector3(0, 0, 8), vel: new THREE.Vector3(0, 0, 0), yaw: 0, climbing: false, onGround: true };
+const playerGroup = new THREE.Group();
+const torso = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, 0.8), new THREE.MeshLambertMaterial({ color: 0x111118 }));
+torso.position.y = 1.9; playerGroup.add(torso);
+const head = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 1.1), new THREE.MeshLambertMaterial({ color: 0xffe0bd }));
+head.position.y = 3.35; playerGroup.add(head);
+const carriedEggMesh = new THREE.Mesh(new THREE.SphereGeometry(0.85, 12, 12), new THREE.MeshLambertMaterial({ color: 0x00ffff }));
+carriedEggMesh.scale.set(1, 1.3, 1); carriedEggMesh.position.set(0, 2.4, -1.1); carriedEggMesh.visible = false;
+playerGroup.add(carriedEggMesh);
+scene.add(playerGroup);
+
+const trailPieces = [];
+for (let i = 0; i < 16; i++) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 6), new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: (16 - i) / 20 }));
+  scene.add(m); trailPieces.push({ mesh: m, pos: player.pos.clone() });
+}
+
+// BOSHQARUV
+const keys = {};
+window.addEventListener("keydown", e => {
+  keys[e.code] = true;
+  if (e.code === "KeyE") triggerInteraction();
+  if (e.code === "KeyP") openModal("adminModal");
+});
+window.addEventListener("keyup", e => keys[e.code] = false);
+
+let camYaw = 0, camPitch = 0.35, isDraggingCam = false, prevTouch = { x: 0, y: 0 };
+canvas.addEventListener("mousedown", e => { isDraggingCam = true; prevTouch = { x: e.clientX, y: e.clientY }; });
+window.addEventListener("mouseup", () => isDraggingCam = false);
+window.addEventListener("mousemove", e => {
+  if (!isDraggingCam) return;
+  camYaw -= (e.clientX - prevTouch.x) * 0.007;
+  camPitch = Math.max(-0.3, Math.min(1.2, camPitch + (e.clientY - prevTouch.y) * 0.007));
+  prevTouch = { x: e.clientX, y: e.clientY };
+});
+
+let joyVec = { x: 0, y: 0 };
+const joyZone = document.getElementById("joystickZone");
+const joyKnob = document.getElementById("joystickKnob");
+let joyActive = false;
+function handleJoy(clientX, clientY) {
+  const rect = joyZone.getBoundingClientRect();
+  let dx = clientX - (rect.left + rect.width / 2);
+  let dy = clientY - (rect.top + rect.height / 2);
+  const dist = Math.hypot(dx, dy), maxR = 38;
+  if (dist > maxR) { dx = (dx / dist) * maxR; dy = (dy / dist) * maxR; }
+  joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  joyVec.x = dx / maxR; joyVec.y = dy / maxR;
+}
+joyZone.addEventListener("pointerdown", e => { joyActive = true; handleJoy(e.clientX, e.clientY); });
+window.addEventListener("pointermove", e => { if (joyActive) handleJoy(e.clientX, e.clientY); });
+window.addEventListener("pointerup", () => { joyActive = false; joyVec = { x: 0, y: 0 }; joyKnob.style.transform = "translate(-50%, -50%)"; });
+document.getElementById("jumpBtn").addEventListener("pointerdown", () => keys["Space"] = true);
+document.getElementById("jumpBtn").addEventListener("pointerup", () => keys["Space"] = false);
+
+function renderHotbar() {
+  const hb = document.getElementById("hotbar"); hb.innerHTML = "";
+  const items = [{ name: "Bat", icon: "🏏" }, ...state.eggPocket.map(e => ({ name: e.name, icon: "🥚" }))];
+  for (let i = 0; i < 6; i++) {
+    const it = items[i], div = document.createElement("div");
+    div.className = "slot" + (state.selectedHotbar === i ? " active" : "");
+    div.innerHTML = `<span class="num">${i + 1}</span>` + (it ? `<div class="s-icon">${it.icon}</div><div class="s-name">${it.name}</div>` : "");
+    div.onclick = () => { state.selectedHotbar = i; if (i === 0) state.guardsAsleepTimer = 5; renderHotbar(); };
+    hb.appendChild(div);
+  }
+}
+renderHotbar();
+
+function activateSleepGuards() { state.guardsAsleepTimer = 15; showAlert("😴 All Guards Asleep!", "#00e5ff"); }
+function toggleJetpack() { state.jetpackActive = !state.jetpackActive; showAlert(state.jetpackActive ? "🚀 Jetpack ON" : "Jetpack OFF", "#39ff14"); }
+function toggle2xSpeed() { state.speed2xActive = !state.speed2xActive; showAlert(state.speed2xActive ? "⚡ 2x Speed ON" : "2x Speed OFF", "#39ff14"); }
+function stopTreadmill() { state.onTreadmill = false; player.pos.z += 4; document.getElementById("stopTrainBtn").style.display = "none"; }
+
+let currentInteraction = null;
+function triggerInteraction() { if (currentInteraction) currentInteraction(); }
+function showAlert(msg, color = "#39ff14") {
+  const el = document.getElementById("alertBanner");
+  el.style.color = color; el.textContent = msg;
+  clearTimeout(showAlert._t);
+  showAlert._t = setTimeout(() => el.textContent = "", 3500);
+}
+function dropCarriedEgg() {
+  state.carriedEgg = null; carriedEggMesh.visible = false;
+  document.getElementById("dropBtn").style.display = "none";
+  showAlert("Egg Dropped!", "#ff5555");
+}
+
+function closeModals() { document.querySelectorAll(".modal").forEach(m => m.style.display = "none"); }
+function openModal(id) {
+  closeModals(); const el = document.getElementById(id); if (el) el.style.display = "flex";
+  if (id === "sellModal") renderSellModal();
+  if (id === "mutateModal") renderMutateModal();
+  if (id === "staminaModal") renderStaminaModal();
+  if (id === "trailsModal") renderTrailsModal();
+  if (id === "animalsModal") renderAnimalsModal();
+  if (id === "eggsModal") renderEggsModal();
+  if (id === "indexModal") renderIndexModal();
+  if (id === "rebirthModal") renderRebirthModal();
+  if (id === "claimModal") renderClaimModal();
+}
+
+function renderSellModal() {
+  const grid = document.getElementById("sellGrid"); grid.innerHTML = ""; let total = 0;
+  state.animals.forEach(a => {
+    if (a.selected) total += a.val;
+    const card = document.createElement("div"); card.className = "item-card" + (a.selected ? " selected" : "");
+    card.innerHTML = `<div style="font-size:26px;">${a.icon}</div><div style="font-weight:900;font-size:11px;">${a.name}</div><div style="color:#39ff14;font-weight:900;">$${fmt(a.val)}</div>`;
+    card.onclick = () => { a.selected = !a.selected; renderSellModal(); };
+    grid.appendChild(card);
+  });
+  document.getElementById("sellTotalVal").textContent = "$" + fmt(total);
+}
+function selectAllSell() { state.animals.forEach(a => { if (!a.equipped) a.selected = true; }); renderSellModal(); }
+function sellSelectedAnimals() {
+  const toSell = state.animals.filter(a => a.selected); if (!toSell.length) return;
+  let sum = 0; toSell.forEach(a => sum += a.val); state.cash += sum;
+  state.animals = state.animals.filter(a => !a.selected); rebuildBasePetMeshes(); renderSellModal();
+  showAlert(`${toSell.length} animals sold for $${fmt(sum)}!`, "#39ff14");
+}
+
+function renderMutateModal() {
+  const grid = document.getElementById("mutateGrid"); grid.innerHTML = "";
+  const groups = {}; state.animals.forEach(a => { const k = `${a.name}_${a.mutation || 'Normal'}`; groups[k] = groups[k] || { count: 0, sample: a }; groups[k].count++; });
+  Object.keys(groups).forEach(k => {
+    const { count, sample } = groups[k];
+    const card = document.createElement("div"); card.className = "item-card";
+    card.innerHTML = `<div style="font-size:26px;">${sample.icon}</div><div style="font-weight:900;font-size:11px;">${sample.name}</div><div style="color:#38b6ff;font-weight:900;">${count}/3</div><button class="action-btn">FUSE</button>`;
+    card.onclick = () => {
+      if (count < 3) return showAlert("Need 3 animals!", "#ff5555");
+      let rem = 0; state.animals = state.animals.filter(a => { if (`${a.name}_${a.mutation || 'Normal'}` === k && rem < 3) { rem++; return false; } return true; });
+      state.animals.push({ id: Date.now(), name: sample.name, rarity: sample.rarity, mutation: "Radiant", rate: sample.rate * 3, val: sample.val * 3, weight: 100, icon: sample.icon, equipped: true, selected: false });
+      rebuildBasePetMeshes(); renderMutateModal(); showAlert("Fused into Radiant!", "#39ff14");
+    };
+    grid.appendChild(card);
+  });
+}
+
+function getReachableBiomeName(stam) {
+  let reach = BIOMES[0].name; BIOMES.forEach(b => { if (stam >= b.reqStam) reach = b.name; }); return reach;
+}
+function renderStaminaModal() {
+  document.getElementById("stamCur").textContent = state.maxStamina;
+  document.getElementById("stamNext").textContent = state.maxStamina + 4;
+  document.getElementById("stamBuyBtn").textContent = "$" + fmt(state.staminaCost);
+  document.getElementById("stamReachInfo").textContent = `Reaches: ${getReachableBiomeName(state.maxStamina + 4)}`;
+}
+function buyStamina() {
+  if (state.cash < state.staminaCost) return showAlert("Not enough Cash!", "#ff5555");
+  state.cash -= state.staminaCost; state.maxStamina += 4; state.stamina = state.maxStamina; state.staminaCost *= 1.65;
+  renderStaminaModal(); showAlert(`+4 Stamina Upgraded!`, "#38b6ff");
+}
+
+function renderTrailsModal() {
+  const list = document.getElementById("trailsList"); list.innerHTML = "";
+  state.trails.forEach(t => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#2b384e;padding:9px;border:3px solid #000;border-radius:10px;";
+    row.innerHTML = `<div><div style="font-weight:900;">${t.name}</div><div style="color:#39ff14;">${t.mult}x</div></div><button class="action-btn">${t.owned ? "EQUIP" : "$" + fmt(t.cost)}</button>`;
+    row.querySelector("button").onclick = () => { if (!t.owned) { if (state.cash < t.cost) return; state.cash -= t.cost; t.owned = true; } state.trailMult = t.mult; renderTrailsModal(); };
+    list.appendChild(row);
+  });
+}
+function buyPetSlot() {
+  if (state.cash < 25e12) return showAlert("Need $25T!", "#ff5555");
+  state.cash -= 25e12; state.maxActivePets++; renderAnimalsModal(); showAlert("Slot added!", "#39ff14");
+}
+function renderAnimalsModal() {
+  const list = document.getElementById("animalsList"); list.innerHTML = "";
+  document.getElementById("activePetCount").textContent = `${state.animals.filter(a => a.equipped).length}/${state.maxActivePets}`;
+  state.animals.forEach(a => {
+    const card = document.createElement("div"); card.className = "item-card" + (a.equipped ? " selected" : "");
+    card.innerHTML = `<div style="font-size:24px;">${a.icon}</div><div style="font-weight:900;font-size:11px;">${a.name}</div><button class="action-btn">${a.equipped ? "UNEQUIP" : "EQUIP"}</button>`;
+    card.onclick = () => { a.equipped = !a.equipped; rebuildBasePetMeshes(); renderAnimalsModal(); };
+    list.appendChild(card);
+  });
+}
+function equipBestPets() { state.animals.sort((a, b) => b.rate - a.rate); state.animals.forEach((a, i) => a.equipped = i < state.maxActivePets); rebuildBasePetMeshes(); renderAnimalsModal(); }
+function placeAllPocketEggs() {
+  for (let i = 0; i < 6; i++) { if (!state.incubators[i] && state.eggPocket.length > 0) state.incubators[i] = { pet: state.eggPocket.shift(), timeLeft: 15 }; }
+  renderHotbar(); renderEggsModal();
+}
+function renderEggsModal() {
+  const list = document.getElementById("growingEggsList"); list.innerHTML = ""; let count = 0;
+  state.incubators.forEach((inc, idx) => {
+    if (!inc) return; count++;
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;justify-content:space-between;align-items:center;background:#2b384e;padding:9px;border:3px solid #000;border-radius:10px;";
+    row.innerHTML = `<div><div style="font-weight:900;">🥚 ${inc.pet.name}</div><div>${inc.timeLeft}s</div></div><button class="action-btn">HATCH</button>`;
+    row.querySelector("button").onclick = () => hatchIncubator(idx); list.appendChild(row);
+  });
+  document.getElementById("growingCount").textContent = `${count}/6`;
+}
+function hatchIncubator(idx) {
+  const inc = state.incubators[idx]; if (!inc) return; const p = inc.pet;
+  state.animals.push({ id: Date.now(), name: p.name, rarity: p.rarity, mutation: "Normal", rate: p.rate, val: p.val, weight: 50, icon: p.icon, equipped: true, selected: false });
+  state.unlockedIndex[p.name] = true; state.incubators[idx] = null; rebuildBasePetMeshes(); renderEggsModal(); showAlert(`Hatched ${p.name}!`, "#39ff14");
+}
+function hatchAllReady() { for (let i = 0; i < 6; i++) if (state.incubators[i]) hatchIncubator(i); }
+
+function renderIndexModal() {
+  const grid = document.getElementById("indexList"); grid.innerHTML = "";
+  document.getElementById("indexTotalProgress").textContent = `${Object.keys(state.unlockedIndex).length}/136`;
+  const b = BIOMES[parseInt(document.getElementById("biomeIndexFilter").value || "0", 10)];
+  b.pets.forEach(p => {
+    const unl = !!state.unlockedIndex[p.name];
+    const card = document.createElement("div"); card.className = "item-card" + (unl ? " selected" : "");
+    card.innerHTML = `<div style="font-size:26px;filter:${unl ? 'none' : 'brightness(0)'};">${p.icon}</div><div style="font-size:11px;">${unl ? p.name : "???"}</div>`;
+    grid.appendChild(card);
+  });
+}
+function claimIndexRewards() { showAlert("Index rewards claimed!", "#39ff14"); }
+function renderRebirthModal() {
+  document.getElementById("rebirthLvl").textContent = state.rebirths + 1;
+  document.getElementById("rebirthReq").textContent = fmt(50000 * Math.pow(3.2, state.rebirths)) + " Speed";
+}
+function doRebirth() { state.rebirths++; state.cashMult += 0.5; renderRebirthModal(); showAlert("Rebirth complete!", "#39ff14"); }
+function renderClaimModal() {
+  const grid = document.getElementById("claimGrid"); grid.innerHTML = "";
+  state.playtimeRewards.forEach(r => {
+    const card = document.createElement("div"); card.className = "item-card";
+    card.innerHTML = `<div style="font-size:20px;">🎁</div><div style="font-size:10px;">${r.label}</div><button class="action-btn">CLAIM</button>`;
+    card.querySelector("button").onclick = () => { r.claimed = true; state.cash += (r.cash || 1000); showAlert(`Claimed ${r.label}!`, "#39ff14"); };
+    grid.appendChild(card);
+  });
+}
+rebuildBasePetMeshes();
+
+setInterval(() => {
+  state.sessionSeconds++;
+  if (state.guardsAsleepTimer > 0) state.guardsAsleepTimer--;
+  let totalRate = 0; state.animals.forEach(a => { if (a.equipped) totalRate += a.rate; });
+  totalRate *= state.cashMult; state.cash += totalRate;
+  document.getElementById("offlineBanner").textContent = `You Make $${fmt(totalRate)}/s Offline`;
+  state.incubators.forEach(inc => { if (inc && inc.timeLeft > 0) inc.timeLeft--; });
+}, 1000);
+
+let lastTime = performance.now();
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastTime) / 1000, 0.05); lastTime = now;
+
+  let mx = joyVec.x, mz = joyVec.y;
+  if (keys["KeyW"] || keys["ArrowUp"]) mz -= 1;
+  if (keys["KeyS"] || keys["ArrowDown"]) mz += 1;
+  if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
+  if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
+
+  const spd = (22 + Math.log10(state.speed + 10) * 2) * (state.adminSuperSpeed ? 3 : 1);
+  const forward = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw));
+  const right = new THREE.Vector3(Math.cos(camYaw), 0, -Math.sin(camYaw));
+
+  if (player.pos.distanceTo(TREADMILL_POS) < 3.6 && player.pos.y < 1) {
+    state.onTreadmill = true; document.getElementById("stopTrainBtn").style.display = "block";
+    state.speed += Math.pow(3.2, state.treadmillLvl) * dt * 20;
+  } else { state.onTreadmill = false; document.getElementById("stopTrainBtn").style.display = "none"; }
+
+  const nearWallZ = Math.abs(player.pos.z - (WALL_Z + 1.8)) < 2.7 && Math.abs(player.pos.x) < WALL_WIDTH / 2;
+  if (nearWallZ && (mz < -0.1 || player.pos.y > 0.5) && (state.stamina > 0 || state.adminInfStamina)) {
+    player.climbing = true;
+  } else if (!nearWallZ) { player.climbing = false; }
+
+  if (player.climbing) {
+    player.pos.y = Math.max(0, Math.min(TOTAL_WALL_HEIGHT + 2, player.pos.y - mz * spd * dt));
+    player.pos.x += mx * 18 * dt; player.pos.z = WALL_Z + 1.6; player.vel.y = 0;
+    if (!state.adminInfStamina) state.stamina = Math.max(0, state.stamina - 3 * dt);
+  } else {
+    const moveDir = new THREE.Vector3().addScaledVector(forward, -mz).addScaledVector(right, mx);
+    if (moveDir.lengthSq() > 0.01) { moveDir.normalize(); player.pos.x += moveDir.x * spd * dt; player.pos.z += moveDir.z * spd * dt; player.yaw = Math.atan2(moveDir.x, moveDir.z); }
+    player.vel.y -= 38 * dt; player.pos.y += player.vel.y * dt;
+
+    let onLedge = false;
+    biomeBounds.forEach(b => {
+      if (Math.abs(player.pos.x - b.sideX) < 18 && Math.abs(player.pos.z - (WALL_Z - 8)) < 13 && player.pos.y >= b.endY - 1.6 && player.pos.y <= b.endY + 2.0 && player.vel.y <= 0) {
+        player.pos.y = b.endY; player.vel.y = 0; player.onGround = true; onLedge = true;
+      }
+    });
+
+    document.getElementById("sleepGuardsBtn").style.display = onLedge ? "flex" : "none";
+    if (!onLedge && player.pos.y <= 0) {
+      player.pos.y = 0; player.vel.y = 0; player.onGround = true; state.stamina = state.maxStamina;
+      if (state.carriedEgg && player.pos.z > -26) {
+        state.eggPocket.push(state.carriedEgg);
+        showAlert(`Egg Stolen Successfully!`, "#39ff14");
+        state.carriedEgg = null; carriedEggMesh.visible = false; document.getElementById("dropBtn").style.display = "none"; renderHotbar();
+      }
+    }
+  }
+
+  biomeGuardians.forEach(g => {
+    if (state.guardsAsleepTimer <= 0) {
+      g.angle += dt * 1.6; g.group.position.x = g.centerX + Math.cos(g.angle) * 9; g.group.position.z = g.centerZ + Math.sin(g.angle) * 5;
+      if (!state.adminGodMode && state.carriedEgg && player.pos.distanceTo(g.group.position) < 4.2) { dropCarriedEgg(); player.pos.set(0, 0, 8); showAlert("Caught by Guardian!", "#ff2222"); }
+    }
+  });
+
+  playerGroup.position.copy(player.pos); playerGroup.rotation.y = player.yaw;
+  document.getElementById("altMarker").style.bottom = Math.min(100, Math.max(0, (player.pos.y / TOTAL_WALL_HEIGHT) * 100)) + "%";
+
+  currentInteraction = null; let promptLabel = "";
+  wildEggMeshes.forEach(egg => {
+    if (!egg.stolen && player.pos.distanceTo(egg.pos) < 5.5) {
+      promptLabel = `Steal ${egg.pet.name} Egg`;
+      currentInteraction = () => { egg.stolen = true; egg.group.visible = false; state.carriedEgg = egg.pet; carriedEggMesh.visible = true; document.getElementById("dropBtn").style.display = "block"; showAlert("Egg Grabbed!", "#ffae00"); };
+    }
+  });
+  incubatorMeshes.forEach(incMesh => {
+    if (player.pos.distanceTo(incMesh.group.position) < 4.2) {
+      const slot = state.incubators[incMesh.index];
+      if (!slot && (state.carriedEgg || state.eggPocket.length > 0)) {
+        promptLabel = "Place Egg";
+        currentInteraction = () => { state.incubators[incMesh.index] = { pet: state.carriedEgg || state.eggPocket.shift(), timeLeft: 15 }; state.carriedEgg = null; carriedEggMesh.visible = false; document.getElementById("dropBtn").style.display = "none"; renderHotbar(); };
+      } else if (slot) { promptLabel = "Hatch Egg"; currentInteraction = () => hatchIncubator(incMesh.index); }
+    }
+  });
+  interactables.forEach(inter => { if (player.pos.distanceTo(inter.pos) < inter.radius) { promptLabel = inter.label; currentInteraction = inter.action; } });
+
+  const promptEl = document.getElementById("interactPrompt");
+  if (currentInteraction) { promptEl.style.display = "flex"; document.getElementById("interactText").textContent = promptLabel; } else { promptEl.style.display = "none"; }
+
+  document.getElementById("speedVal").textContent = fmt(state.speed);
+  document.getElementById("cashVal").textContent = fmt(state.cash);
+
+  const camDist = 14;
+  camera.position.set(player.pos.x + Math.sin(camYaw) * Math.cos(camPitch) * camDist, player.pos.y + 3.5 + Math.sin(camPitch) * camDist, player.pos.z + Math.cos(camYaw) * Math.cos(camPitch) * camDist);
+  camera.lookAt(player.pos.x, player.pos.y + 2.5, player.pos.z);
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
